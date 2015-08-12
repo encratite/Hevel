@@ -1,0 +1,326 @@
+<!doctype>
+<html>
+	<head>
+		<title>Rosetta code samples</title>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/languages/cs.min.js"></script>
+		<script>
+			hljs.initHighlightingOnLoad();
+		</script>
+		<style>
+			body {
+				padding: 2em;
+				font-family: "Segoe UI Light", Tahoma, Helvetica, sans-serif;
+				background-color: #f0f0f0;
+			}
+			
+			pre {
+				border: 1px solid black;
+				padding: 1em;
+				width: 50em;
+				overflow: auto;
+				background-color: #fff;
+			}
+			
+			code {
+				font-family: "Lucida Console", monospace;
+				font-size: 12px;
+			}
+			
+			.hljs-keyword {
+				color: #0000ff;
+			}
+			
+			.hljs-title {
+				color: #2b91af;
+			}
+			
+			.hljs-string {
+				color: #a31515;
+			}
+			
+			.hljs-comment {
+				color: #008000;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>C# version of the sample</h1>
+		<pre><code>using System;
+using System.Collections.Generic;
+
+namespace StateMachineTest
+{
+    abstract class StateMachine
+    {
+        public void Run(string input)
+        {
+            Reset();
+            Console.WriteLine("Processing string \"{0}\":", input);
+            foreach (char character in input)
+                ProcessInput(character);
+            ProcessInput(null);
+            PrintHistory();
+        }
+
+        protected abstract void Reset();
+
+        protected abstract void ProcessInput(char? input);
+
+        protected abstract void PrintHistory();
+    }
+
+    class IntegerStateMachine : StateMachine
+    {
+        private enum IntegerState
+        {
+            Start,
+            Zero,
+            NonZeroDigit,
+            Digit,
+            Invalid,
+            Valid
+        }
+
+        private IntegerState _State;
+
+        private List<IntegerState> _History;
+
+        protected override void Reset()
+        {
+            _State = IntegerState.Start;
+            _History = new List<IntegerState> { _State };
+        }
+
+        protected override void ProcessInput(char? input)
+        {
+            switch (_State)
+            {
+                case IntegerState.Start:
+                    if (IsZero(input))
+                        _State = IntegerState.Zero;
+                    else if (IsNonZeroDigit(input))
+                        _State = IntegerState.Digit;
+                    else
+                        _State = IntegerState.Invalid;
+                    break;
+
+                case IntegerState.Zero:
+                    if (input == null)
+                        _State = IntegerState.Valid;
+                    else
+                        _State = IntegerState.Invalid;
+                    break;
+
+                case IntegerState.NonZeroDigit:
+                    if (IsDigit(input))
+                        _State = IntegerState.Digit;
+                    else if (input == null)
+                        _State = IntegerState.Valid;
+                    else
+                        _State = IntegerState.Invalid;
+                    break;
+
+                case IntegerState.Digit:
+                    if (input == null)
+                        _State = IntegerState.Valid;
+                    else if (!IsDigit(input))
+                        _State = IntegerState.Invalid;
+                    break;
+
+                case IntegerState.Valid:
+                    _State = IntegerState.Invalid;
+                    break;
+            }
+            _History.Add(_State);
+        }
+
+        protected override void PrintHistory()
+        {
+            int counter = 1;
+            foreach (var state in _History)
+            {
+                Console.WriteLine("State {0}: {1}", counter, state);
+                counter++;
+            }
+        }
+
+        private bool IsZero(char? input)
+        {
+            return input == '0';
+        }
+
+        private bool IsNonZeroDigit(char? input)
+        {
+            return input >= '1' && input <= '9';
+        }
+
+        private bool IsDigit(char? input)
+        {
+            return IsZero(input) || IsNonZeroDigit(input);
+        }
+    }
+
+    class Program
+    {
+        static void Main(string[] arguments)
+        {
+            StateMachine stateMachine = new IntegerStateMachine();
+            stateMachine.Run("123");
+            stateMachine.Run("0");
+            stateMachine.Run("0123");
+            stateMachine.Run("");
+        }
+    }
+}</code></pre>
+		<h1>JavaScript version of the sample</h1>
+		<code><pre>
+var StateMachineTest = {};
+
+
+StateMachineTest.StateMachine = (function () {
+	var type = StateMachine;
+	
+	function StateMachine() {
+	}
+	
+	var proto = type.prototype;
+	
+	proto.run = function (input) {
+		this.reset();
+		console.log("Processing string \"" + input + "\"");
+		for (var i = 0 ; i < input.length; i++) {
+			this.processInput(input[i]);
+		}
+		this.processInput(null);
+		this.printHistory();
+	};
+	
+	// Abstract
+	proto.reset = function () {
+	};
+	
+	// Abstract
+	proto.processInput = function () {
+	};
+	
+	// Abstract
+	proto.printHistory = function () {
+	};
+	
+	return type;
+})();
+
+StateMachineTest.IntegerStateMachine = (function () {
+	var type = IntegerStateMachine;
+	var base = StateMachineTest.StateMachine;
+	
+	// Enumeration
+	var IntegerState = {
+		Start: 'Start',
+		Zero: 'Zero',
+		NonZeroDigit: 'NonZeroDigit',
+		Digit: 'Digit',
+		Invalid: 'Invalid',
+		Valid: 'Valid'
+	};
+	
+	function IntegerStateMachine() {
+	}
+	
+	type.prototype = Object.create(base.prototype);
+	var proto = type.prototype;
+	
+	// Override
+	proto.reset = function () {
+		this._state = IntegerState.Start;
+		this._history = [];
+	};
+	
+	// Override
+	proto.processInput = function (input) {
+		switch (this._state) {
+			case IntegerState.Start:
+				if (this._isZero(input))
+					this._state = IntegerState.Zero;
+				else if (this._isNonZeroDigit(input))
+					this._state = IntegerState.Digit;
+				else
+					this._state = IntegerState.Invalid;
+				break;
+
+			case IntegerState.Zero:
+				if (input == null)
+					this._state = IntegerState.Valid;
+				else
+					this._state = IntegerState.Invalid;
+				break;
+
+			case IntegerState.NonZeroDigit:
+				if (this._isDigit(input))
+					this._state = IntegerState.Digit;
+				else if (input == null)
+					this._state = IntegerState.Valid;
+				else
+					this._state = IntegerState.Invalid;
+				break;
+
+			case IntegerState.Digit:
+				if (input == null)
+					this._state = IntegerState.Valid;
+				else if (!this._isDigit(input))
+					this._state = IntegerState.Invalid;
+				break;
+
+			case IntegerState.Valid:
+				this._state = IntegerState.Invalid;
+				break;
+		}
+		this._history.push(this._state);
+	};
+
+	// Override
+	proto.printHistory = function () {
+		var counter = 1;
+		this._history.forEach(function (state) {
+			console.log("State " + counter + ": " + state);
+			counter++;
+		});
+	};
+
+	proto._isZero = function (input) {
+		return input === '0';
+	};
+
+	proto._isNonZeroDigit = function (input) {
+		var charCode = this._charCode(input);
+		return charCode >= this._charCode('1') && input <= this._charCode('9');
+	};
+
+	proto._isDigit = function (input) {
+		return this._isZero(input) || this._isNonZeroDigit(input);
+	};
+	
+	proto._charCode = function (input) {
+		if (input != null) {
+			return input.charCodeAt(0);
+		}
+		else {
+			return null;
+		}
+	};
+	
+	return type;
+})();
+
+function main() {
+	var stateMachine = new StateMachineTest.IntegerStateMachine();
+	stateMachine.run("123");
+	stateMachine.run("0");
+	stateMachine.run("0123");
+	stateMachine.run("");
+}
+
+main();</code></pre>
+	</body>
+</html>
