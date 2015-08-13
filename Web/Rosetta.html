@@ -5,6 +5,7 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/languages/cs.min.js"></script>
 		<script>
+            hljs.configure({tabReplace: '    '});
 			hljs.initHighlightingOnLoad();
 		</script>
 		<style>
@@ -84,7 +85,7 @@ namespace StateMachineTest
 
         private IntegerState _State;
 
-        private List<IntegerState> _History;
+        private List&lt;IntegerState&gt; _History;
 
         protected override void Reset()
         {
@@ -322,5 +323,98 @@ function main() {
 }
 
 main();</code></pre>
+        <h1>Hevel version of the sample</h1>
+        <pre><code class="nohighlight">namespace StateMachineTest
+    class StateMachine
+        run: string input
+            .reset
+            console.log "Processing string \"%\"" input
+            each input
+                .processInput x
+            .processInput nil
+            .printHistory
+            
+        private
+        
+        reset:
+            abstract
+            
+        processInput: string input
+            abstract
+            
+        printHistory:
+            abstract
+            
+    enum IntegerState
+        start
+        zero
+        nonZeroDigit
+        digit
+        invalid
+        valid
+    
+    class IntegerStateMachine StateMachine
+        private
+        
+        IntegerState state
+        Array<IntegerState> history
+        
+        reset:
+            .state = IntegerState.start
+            .history = Array<IntegerState> .state
+            
+        processInput: string input
+            switch .state
+                IntegerState.start
+                    if .zero? input
+                        .state = IntegerState.zero
+                    elsif .nonZeroDigit? input
+                        .state = IntegerState.digit
+                    else
+                        .state = IntegerState.invalid
+                        
+                IntegerState.zero
+                    if == input nil
+                        .state = IntegerState.valid
+                    else
+                        .state = IntegerState.invalid
+                
+                IntegerState.nonZeroDigit
+                    if .digit? input
+                        .state = IntegerState.digit
+                    elsif == input nil
+                        .state = IntegerState.valid
+                    else
+                        .state = IntegerState.invalid
+                        
+                IntegerState.digit
+                    if == input nil
+                        .state = IntegerState.valid
+                    elsif ! (.digit? input)
+                        .state = IntegerState.invalid
+                    
+                IntegerState.valid
+                    .state = IntegerState.invalid
+                    
+            history.add .state
+        
+        printHistory:
+            counter := 1
+            each .history
+                console.log "State %: %" counter .state
+                counter = ++ counter
+                
+        bool zero?: string input
+            return == input "0"
+            
+        bool nonZeroDigit?: string input
+            return && (>= input ("1".charCodeAt 0)) (<= input ("9".charCodeAt 0))
+            
+        bool digit?: string input
+            return || (.zero? input) (.nonZeroDigit? input)
+            
+main:
+    stateMachine := StateMachineTest.IntegerStateMachine
+</code></pre>
 	</body>
 </html>
